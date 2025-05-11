@@ -35,7 +35,7 @@ public class Car : MonoBehaviour
     // 0: both bumpers are fixed
     // 1: left bumper is free to move, no friction
     // 2: left bumper is free to move, with friction
-    public int bumperMode = 2;
+    public int bumperMode = 0;
 
     // helper flag to automatically start the car when recording starts
     // Window > General > Recorder > Start Recording
@@ -45,15 +45,15 @@ public class Car : MonoBehaviour
 
 
     // initial velocity of the car
-    public float initialVelocity = 0f;
+    public float initialVelocity = 1.0f;
 
     // the length of the uncompressed spring
-    public float springLength = 0f;
+    public float springLength = 15f;
 
     // spring constant
-    public float springConstant = 0f;
+    public float springConstant = 10f;
 
-    // friction coefficient bumper (laminare viskose Dämpfung FR=frictionCoefficient * v)
+    // friction coefficient bumper (laminare viskose Dï¿½mpfung FR=frictionCoefficient * v)
     public float frictionCoefficient = 0f;
 
 
@@ -81,11 +81,22 @@ public class Car : MonoBehaviour
         {
             case 0:
                 // fix bumper in place
-
+                leftBumper.constraints = RigidbodyConstraints.FreezeAll;
+                rightBumper.constraints = RigidbodyConstraints.FreezeAll;
+                leftBumper.isKinematic = true;
+                rightBumper.isKinematic = true;
                 break;
             case 1:
             case 2:
+                leftBumper.isKinematic = true;
+                rightBumper.isKinematic = false;
+                leftBumper.mass = 1.0f;  // 1 kg as specified
                 // allow bumper to move along z-axis
+                leftBumper.constraints = RigidbodyConstraints.FreezePositionX
+                | RigidbodyConstraints.FreezePositionY
+                | RigidbodyConstraints.FreezeRotationX
+                | RigidbodyConstraints.FreezeRotationY
+                | RigidbodyConstraints.FreezeRotationZ;
 
 
                 // constrain motion of the bumper to 1D along z-axis
@@ -129,7 +140,8 @@ public class Car : MonoBehaviour
             launchTime = Time.time;
 
             // Your code here ...
-            
+            rb.linearVelocity = new Vector3(0, 0, 1 );
+
 
             // log
             Debug.Log("Launching the car");
@@ -148,25 +160,52 @@ public class Car : MonoBehaviour
     private void FixedUpdate()
     {
         // Your code here ...
-        
+
+        float forceLeft = 0.0f;
+        float forceRight = 0.0f;
+        float compressionLeft = 0.0f;
+        float compressionRight = 0.0f;
 
         // === left spring
-
-        
-
-
-        // === right spring
-
-        
-
-
-        // === left bumper
-
-        if (bumperMode == 1 || bumperMode == 2)
+        // Calculate distance between car and left bumper
+        float distanceToLeftBumper = Mathf.Abs(rb.position.z - leftBumper.position.z) - (carWidth / 2 + bumperWidth / 2);
+        // Check if spring is compressed (distance less than spring rest length)
+        if (distanceToLeftBumper < springLength)
         {
-            
+            // Calculate compression
+            compressionLeft = springLength - distanceToLeftBumper;
+
+            // Calculate spring force (F = k*x)
+            forceLeft = springConstant * compressionLeft;
+            rb.AddForce(new Vector3(0, 0, forceLeft), ForceMode.Force);
         }
 
+        // === right spring
+        // Calculate distance between car and right bumper
+        float distanceToRightBumper = Mathf.Abs(rb.position.z - rightBumper.position.z) - (carWidth / 2 + bumperWidth / 2);
+
+        // Check if spring is compressed
+        if (distanceToRightBumper < springLength)
+        {
+            // Calculate compression
+            compressionRight = springLength - distanceToRightBumper;
+
+            // Calculate spring force
+            forceRight = springConstant * compressionRight;
+
+            // Apply force to car
+            rb.AddForce(new Vector3(0, 0, -forceRight), ForceMode.Force);
+
+            // Right bumper is always fixed, so no need to apply force to it
+        }
+
+        // === left bumper friction
+        if (bumperMode == 2)
+        {
+            // Apply friction force to left bumper (proportional to velocity)
+            Vector3 frictionForce = -leftBumper.linearVelocity * frictionCoefficient;
+            leftBumper.AddForce(frictionForce, ForceMode.Force);
+        }
 
         // === time series data
 
@@ -174,8 +213,8 @@ public class Car : MonoBehaviour
         if (isLaunched)
         {
             // Your code here ... (adapt as needed)
-            //TimeSeriesData timeSeriesData = new(rb, Time.time - launchTime, compressionLeft, forceLeft, compressionRight, forceRight, leftBumper.position.z, leftBumper.linearVelocity.z);
-            //exporter.AddData(timeSeriesData);
+            TimeSeriesData timeSeriesData = new(rb, Time.time - launchTime, compressionLeft, forceLeft, compressionRight, forceRight, leftBumper.position.z, leftBumper.linearVelocity.z);
+            exporter.AddData(timeSeriesData);
         }
     }
 
