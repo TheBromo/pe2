@@ -194,24 +194,38 @@ public class Car : MonoBehaviour
         // Calculate distance between car and right bumper
         float distanceToRightBumper = Mathf.Abs(rb.position.z - rightBumper.position.z) - (carWidth / 2 + bumperWidth / 2);
 
-        // Check if spring is compressed
-        if (distanceToRightBumper < springLength)
+// If car is touching or penetrating the right bumper
+    if (distanceToRightBumper <= 0)
+    {
+        // Apply collision formulas
+        // Since right bumper is fixed (infinite mass), car velocity simply reverses
+        float carVelocityBefore = rb.linearVelocity.z;
+        
+        // Using elastic collision formula (perfectly elastic collision):
+        // For collision with fixed object, v' = -v
+        rb.linearVelocity= new Vector3(0, 0, -carVelocityBefore);
+        
+        // Move car slightly away from bumper to prevent getting stuck
+        if (rb.position.z > rightBumper.position.z)
         {
-            // Calculate compression
-            compressionRight = springLength - distanceToRightBumper;
-
-            // Calculate spring force
-            forceRight = springConstant * compressionRight;
-
-            // Apply force to car
-            // Apply force to car
-            if (rb.position.z < rightBumper.position.z)
-                rb.AddForce(new Vector3(0, 0, -forceRight), ForceMode.Force);
-            else
-                rb.AddForce(new Vector3(0, 0, forceRight), ForceMode.Force);
-            // Right bumper is always fixed, so no need to apply force to it
+            rb.position = new Vector3(
+                rb.position.x,
+                rb.position.y,
+                rightBumper.position.z + (carWidth/2 + bumperWidth/2) + 0.001f
+            );
         }
-
+        else
+        {
+            rb.position = new Vector3(
+                rb.position.x,
+                rb.position.y,
+                rightBumper.position.z - (carWidth/2 + bumperWidth/2) - 0.001f
+            );
+        }
+        
+        Debug.Log("Collision with right bumper! Velocity before: " + carVelocityBefore + 
+                  ", Velocity after: " + rb.linearVelocity.z);
+    }
         // === left bumper friction
         if (bumperMode == 2)
         {
