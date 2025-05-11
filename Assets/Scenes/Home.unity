@@ -712,11 +712,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d19152cd21678b243bc045df5866e0db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bumperMode: 2
+  bumperMode: 0
   initialVelocity: 1
   springLength: 0.15
-  springConstant: 20
-  frictionCoefficient: 10
+  springConstant: 10
+  frictionCoefficient: 1
 --- !u!114 &1724902500
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -757,9 +757,9 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1888570701}
   serializedVersion: 4
-  m_Mass: 0.4
+  m_Mass: 1
   m_Drag: 0
-  m_AngularDrag: 0.05
+  m_AngularDrag: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}

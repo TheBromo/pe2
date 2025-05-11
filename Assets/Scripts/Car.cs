@@ -35,7 +35,7 @@ public class Car : MonoBehaviour
     // 0: both bumpers are fixed
     // 1: left bumper is free to move, no friction
     // 2: left bumper is free to move, with friction
-    public int bumperMode = 0;
+    public int bumperMode = 2;
 
     // helper flag to automatically start the car when recording starts
     // Window > General > Recorder > Start Recording
@@ -81,15 +81,13 @@ public class Car : MonoBehaviour
         {
             case 0:
                 // fix bumper in place
-                leftBumper.isKinematic = true;
-                rightBumper.isKinematic = true;
+                leftBumper.constraints = RigidbodyConstraints.FreezeAll;
+                rightBumper.constraints = RigidbodyConstraints.FreezeAll;
                 break;
             case 1:
             case 2:
-                leftBumper.isKinematic = true;
-                rightBumper.isKinematic = false;
-                leftBumper.mass = 1.0f;  // 1 kg as specified
                 // allow bumper to move along z-axis
+                leftBumper.isKinematic = false;
                 leftBumper.constraints = RigidbodyConstraints.FreezePositionX
                 | RigidbodyConstraints.FreezePositionY
                 | RigidbodyConstraints.FreezeRotationX
@@ -159,80 +157,40 @@ public class Car : MonoBehaviour
     {
         // Your code here ...
 
-        float forceLeft = 0.0f;
-        float forceRight = 0.0f;
-        float compressionLeft = 0.0f;
-        float compressionRight = 0.0f;
-
         // === left spring
-        // Calculate distance between car and left bumper
         float distanceToLeftBumper = Mathf.Abs(rb.position.z - leftBumper.position.z) - (carWidth / 2 + bumperWidth / 2);
-        // Check if spring is compressed (distance less than spring rest length)
-        if (distanceToLeftBumper < springLength)
+        float compressionLeft = Mathf.Max(0f, springLength - distanceToLeftBumper);
+        float springForceLeft = springConstant * compressionLeft;
+        rb.AddForce(new Vector3(0, 0, springForceLeft), ForceMode.Force);
+
+        // === right spring
+        float compressionRight = 0,springForceRight=0;
+        // --- Aufgabe 1 uncomment to make this and comment task 2 out, to the right side spring 
+        // float distanceToRightBumper = Mathf.Abs(rb.position.z - rightBumper.position.z) - (carWidth / 2 + bumperWidth / 2);
+        // float compressionRight = Mathf.Max(0f, springLength - distanceToRightBumper);
+        // float springForceRight = springConstant * compressionRight;
+        // rb.AddForce(new Vector3(0, 0, -springForceRight), ForceMode.Force);
+
+        // --- Aufgabe 2    
+        float overlapToRightBumper = (carWidth / 2 + bumperWidth / 2) - Mathf.Abs(rb.position.z - rightBumper.position.z);
+        if (overlapToRightBumper > 0f)
         {
-            // Calculate compression
-            compressionLeft = springLength - distanceToLeftBumper;
+            rb.linearVelocity = new Vector3(0, 0, -rb.linearVelocity.z);
+        }
 
-            // Calculate spring force (F = k*x)
-            forceLeft = springConstant * compressionLeft;
-            if (rb.position.z < leftBumper.position.z)
-                rb.AddForce(new Vector3(0, 0, -forceLeft), ForceMode.Force);
-            else
-                rb.AddForce(new Vector3(0, 0, forceLeft), ForceMode.Force);
 
-            // Apply opposite force to left bumper if not fixed
-            if (bumperMode > 0)
+        if (bumperMode == 1 || bumperMode == 2)
+        {
+            // -- Aufgabe 3
+            leftBumper.AddForce(Vector3.back * springForceLeft, ForceMode.Force);
+            if (bumperMode == 2)
             {
-                if (rb.position.z < leftBumper.position.z)
-                    leftBumper.AddForce(new Vector3(0, 0, -forceLeft), ForceMode.Force);
-                else
-                    leftBumper.AddForce(new Vector3(0, 0, forceLeft), ForceMode.Force);
+                // -- Aufgabe 4 
+                float forceFriction = frictionCoefficient * leftBumper.linearVelocity.z;
+                leftBumper.AddForce(Vector3.back * forceFriction, ForceMode.Force);
             }
         }
 
-        // === right spring
-        // Calculate distance between car and right bumper
-        float distanceToRightBumper = Mathf.Abs(rb.position.z - rightBumper.position.z) - (carWidth / 2 + bumperWidth / 2);
-
-// If car is touching or penetrating the right bumper
-    if (distanceToRightBumper <= 0)
-    {
-        // Apply collision formulas
-        // Since right bumper is fixed (infinite mass), car velocity simply reverses
-        float carVelocityBefore = rb.linearVelocity.z;
-        
-        // Using elastic collision formula (perfectly elastic collision):
-        // For collision with fixed object, v' = -v
-        rb.linearVelocity= new Vector3(0, 0, -carVelocityBefore);
-        
-        // Move car slightly away from bumper to prevent getting stuck
-        if (rb.position.z > rightBumper.position.z)
-        {
-            rb.position = new Vector3(
-                rb.position.x,
-                rb.position.y,
-                rightBumper.position.z + (carWidth/2 + bumperWidth/2) + 0.001f
-            );
-        }
-        else
-        {
-            rb.position = new Vector3(
-                rb.position.x,
-                rb.position.y,
-                rightBumper.position.z - (carWidth/2 + bumperWidth/2) - 0.001f
-            );
-        }
-        
-        Debug.Log("Collision with right bumper! Velocity before: " + carVelocityBefore + 
-                  ", Velocity after: " + rb.linearVelocity.z);
-    }
-        // === left bumper friction
-        if (bumperMode == 2)
-        {
-            // Apply friction force to left bumper (proportional to velocity)
-            Vector3 frictionForce = -leftBumper.linearVelocity * frictionCoefficient;
-            leftBumper.AddForce(frictionForce, ForceMode.Force);
-        }
 
         // === time series data
 
@@ -240,7 +198,16 @@ public class Car : MonoBehaviour
         if (isLaunched)
         {
             // Your code here ... (adapt as needed)
-            TimeSeriesData timeSeriesData = new(rb, Time.time - launchTime, compressionLeft, forceLeft, compressionRight, forceRight, leftBumper.position.z, leftBumper.linearVelocity.z);
+            TimeSeriesData timeSeriesData = new(
+                rb,
+                Time.time - launchTime,
+                compressionLeft,
+                springForceLeft,
+                compressionRight,
+                springForceRight,
+                leftBumper.position.z,
+                leftBumper.linearVelocity.z);
+
             exporter.AddData(timeSeriesData);
         }
     }
