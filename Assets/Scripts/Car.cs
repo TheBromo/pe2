@@ -81,8 +81,6 @@ public class Car : MonoBehaviour
         {
             case 0:
                 // fix bumper in place
-                leftBumper.constraints = RigidbodyConstraints.FreezeAll;
-                rightBumper.constraints = RigidbodyConstraints.FreezeAll;
                 leftBumper.isKinematic = true;
                 rightBumper.isKinematic = true;
                 break;
@@ -140,7 +138,7 @@ public class Car : MonoBehaviour
             launchTime = Time.time;
 
             // Your code here ...
-            rb.linearVelocity = new Vector3(0, 0, 1 );
+            rb.linearVelocity = new Vector3(0, 0, 1);
 
 
             // log
@@ -177,7 +175,19 @@ public class Car : MonoBehaviour
 
             // Calculate spring force (F = k*x)
             forceLeft = springConstant * compressionLeft;
-            rb.AddForce(new Vector3(0, 0, forceLeft), ForceMode.Force);
+            if (rb.position.z < leftBumper.position.z)
+                rb.AddForce(new Vector3(0, 0, -forceLeft), ForceMode.Force);
+            else
+                rb.AddForce(new Vector3(0, 0, forceLeft), ForceMode.Force);
+
+            // Apply opposite force to left bumper if not fixed
+            if (bumperMode > 0)
+            {
+                if (rb.position.z < leftBumper.position.z)
+                    leftBumper.AddForce(new Vector3(0, 0, -forceLeft), ForceMode.Force);
+                else
+                    leftBumper.AddForce(new Vector3(0, 0, forceLeft), ForceMode.Force);
+            }
         }
 
         // === right spring
@@ -194,8 +204,11 @@ public class Car : MonoBehaviour
             forceRight = springConstant * compressionRight;
 
             // Apply force to car
-            rb.AddForce(new Vector3(0, 0, -forceRight), ForceMode.Force);
-
+            // Apply force to car
+            if (rb.position.z < rightBumper.position.z)
+                rb.AddForce(new Vector3(0, 0, -forceRight), ForceMode.Force);
+            else
+                rb.AddForce(new Vector3(0, 0, forceRight), ForceMode.Force);
             // Right bumper is always fixed, so no need to apply force to it
         }
 
