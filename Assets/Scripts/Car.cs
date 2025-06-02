@@ -35,7 +35,7 @@ public class Car : MonoBehaviour
     // 0: both bumpers are fixed
     // 1: left bumper is free to move, no friction
     // 2: left bumper is free to move, with friction
-    public int bumperMode = 2;
+    public int bumperMode = 1;
 
     // helper flag to automatically start the car when recording starts
     // Window > General > Recorder > Start Recording
@@ -158,10 +158,10 @@ public class Car : MonoBehaviour
         // Your code here ...
 
         // === left spring
-        float distanceToLeftBumper = Mathf.Abs(rb.position.z - leftBumper.position.z) - (carWidth / 2 + bumperWidth / 2);
-        float compressionLeft = Mathf.Max(0f, springLength - distanceToLeftBumper);
-        float springForceLeft = springConstant * compressionLeft;
-        rb.AddForce(new Vector3(0, 0, springForceLeft), ForceMode.Force);
+        // float distanceToLeftBumper = Mathf.Abs(rb.position.z - leftBumper.position.z) - (carWidth / 2 + bumperWidth / 2);
+        // float compressionLeft = Mathf.Max(0f, springLength - distanceToLeftBumper);
+        // float springForceLeft = springConstant * compressionLeft;
+        // rb.AddForce(new Vector3(0, 0, springForceLeft), ForceMode.Force);
 
         // === right spring
         float compressionRight = 0,springForceRight=0;
@@ -178,11 +178,18 @@ public class Car : MonoBehaviour
             rb.linearVelocity = new Vector3(0, 0, -rb.linearVelocity.z);
         }
 
+        float overlapToLeftBumper = (carWidth / 2 + bumperWidth / 2) - Mathf.Abs(rb.position.z - leftBumper.position.z);
+        if (overlapToLeftBumper > 0f)
+        {
+            //connect left bumper to car with fixed joint
+            FixedJoint fixedJoint = leftBumper.gameObject.AddComponent<FixedJoint>();
+            fixedJoint.connectedBody = rb;
+        }
 
         if (bumperMode == 1 || bumperMode == 2)
         {
             // -- Aufgabe 3
-            leftBumper.AddForce(Vector3.back * springForceLeft, ForceMode.Force);
+            // leftBumper.AddForce(Vector3.back * springForceLeft, ForceMode.Force);
             if (bumperMode == 2)
             {
                 // -- Aufgabe 4 
@@ -201,8 +208,8 @@ public class Car : MonoBehaviour
             TimeSeriesData timeSeriesData = new(
                 rb,
                 Time.time - launchTime,
-                compressionLeft,
-                springForceLeft,
+                0,
+                0,
                 compressionRight,
                 springForceRight,
                 leftBumper.position.z,

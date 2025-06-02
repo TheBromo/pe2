@@ -712,11 +712,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d19152cd21678b243bc045df5866e0db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bumperMode: 0
+  bumperMode: 1
   initialVelocity: 1
   springLength: 0.15
   springConstant: 10
-  frictionCoefficient: 1
+  frictionCoefficient: 0.8
 --- !u!114 &1724902500
 MonoBehaviour:
   m_ObjectHideFlags: 0
