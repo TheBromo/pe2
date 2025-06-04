@@ -667,7 +667,7 @@ Transform:
   m_GameObject: {fileID: 1724902493}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.365, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.3}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -712,6 +712,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d19152cd21678b243bc045df5866e0db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  bumperMode: 2
+  initialVelocity: 1
+  springLength: 0.15
+  springConstant: 10
 --- !u!114 &1724902500
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -767,7 +771,7 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 0
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0

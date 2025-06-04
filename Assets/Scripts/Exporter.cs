@@ -82,10 +82,10 @@ public class TimeSeriesData
     public float VelocityX { get; set; }
     public float VelocityY { get; set; }
     public float VelocityZ { get; set; }
-    public float CompressionLeftSpring { get; set; }
-    public float ForceLeftSpring { get; set; }
-    public float CompressionRightSpring { get; set; }
-    public float ForceRightSpring { get; set; }
+    public float RotationEnergy{ get; set; }
+    public float TranslationEnergy{ get; set; }
+    public float Inertia{ get; set; }
+    public float TotalAngularMomentum{ get; set; }
     public float BumperPositionZ { get; set; }
     public float BumperVelocityZ { get; set; }
 
@@ -96,8 +96,8 @@ public class TimeSeriesData
 
     // Constructor that adds the current position etc. to the time series
     public TimeSeriesData(Rigidbody rb, float currentTime, 
-                          float compressionLeftSpring, float forceLeftSpring, 
-                          float compressionRightSpring, float forceRightSpring,
+                          float rotationEnergy, float translationEnergy, 
+                          float inertia, float totalAngularMomentum,
                           float bumperPositionZ, float bumperVelocityZ)
     {
         Time = currentTime;
@@ -107,22 +107,22 @@ public class TimeSeriesData
         VelocityX = rb.linearVelocity.x;
         VelocityY = rb.linearVelocity.y;
         VelocityZ = rb.linearVelocity.z;
-        CompressionLeftSpring = compressionLeftSpring;
-        ForceLeftSpring = forceLeftSpring;
-        CompressionRightSpring = compressionRightSpring;
-        ForceRightSpring = forceRightSpring;
+        RotationEnergy= rotationEnergy;
+        TranslationEnergy= translationEnergy;
+        Inertia= inertia;
+        TotalAngularMomentum= totalAngularMomentum;
         BumperPositionZ = bumperPositionZ;
         BumperVelocityZ = bumperVelocityZ;
     }
 
     public override string ToString()
     {
-        return $"{Time},{PositionX},{PositionY},{PositionZ},{VelocityX},{VelocityY},{VelocityZ},{CompressionLeftSpring},{ForceLeftSpring},{CompressionRightSpring},{ForceRightSpring},{BumperPositionZ},{BumperVelocityZ}";
+        return $"{Time},{PositionX},{PositionY},{PositionZ},{VelocityX},{VelocityY},{VelocityZ},{RotationEnergy},{TranslationEnergy},{Inertia},{TotalAngularMomentum},{BumperPositionZ},{BumperVelocityZ}";
     }
 
     public static string Header()
     {
         // Note: avoid spaces as they would become part of the colum name if imported using pandas!!
-        return "t,x,y,z,vx,vy,vz,dl_left,F_left,dl_right,F_right,z_bumper,vz_bumper";
+        return "t,x,y,z,vx,vy,vz,rot_energy,trans_energy,inertia,angular_momentum,z_bumper,vz_bumper";
     }
 }
